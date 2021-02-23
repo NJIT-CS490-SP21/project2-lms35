@@ -1,35 +1,53 @@
-import React from "react";
+import React, {useEffect, useState} from "react";
 import "./Board.css"
 import Square from "./Square";
-import {useState, useEffect} from "react"
+import io from 'socket.io-client';
+
+const socket = io(); // Connects to socket connection
 
 function Board() {
-    const [board, setBoard] = useState([0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    const [board, setBoard] = useState([null, null, null, null, null, null, null, null, null]);
+
+    useEffect(() => {
+        socket.on('tictactoe', (data) => {
+            console.log(data)
+            setBoard(board => {
+                let newBoard = [...board]
+                newBoard.splice(data['i'], 1, data['x'])
+                return newBoard
+            });
+        });
+    }, []);
 
     const onClickHandler = (idx) => {
         return (e) => {
             let newBoard = [...board]
-            switch (newBoard[idx]) {
-                case '0':
-                case 0:
-                    newBoard[idx] = 'X'
-                    setBoard(newBoard)
-                    return
-                case 'X':
-                    newBoard[idx] = 0;
-                    setBoard(newBoard)
-                    return;
-            }
+            newBoard.splice(idx, 1, !newBoard[idx])
+            setBoard(newBoard)
+            socket.emit('tictactoe', {i: idx, x: newBoard[idx]})
         }
     }
 
-    let boxes = board.map((value, idx) => {
-        return <Square key={idx} idx={idx} value={value} onClick={onClickHandler(idx)}/>
-    })
+    const valueHelper = (value) => {
+        switch (value) {
+            case null:
+            default:
+                return '';
+            case false:
+                return 'O';
+            case true:
+                return 'X';
+        }
+    }
 
     return (
         <div className="board">
-            {boxes}
+            {board.map((value, idx) =>
+                <Square key={idx}
+                        idx={idx}
+                        value={valueHelper(value)}
+                        onClick={onClickHandler(idx)}/>
+            )}
         </div>
     );
 }
