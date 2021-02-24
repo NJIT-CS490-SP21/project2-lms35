@@ -1,12 +1,13 @@
-import React, {useEffect, useState} from "react";
-import "./Board.css"
-import Square from "./Square";
+import React, {useContext, useEffect, useState} from "react";
+import "../Board.css"
+import Square from "../Square";
+import {Context as GameContext} from "../context/game";
 import io from 'socket.io-client';
 
 const socket = io(); // Connects to socket connection
 
 function Board() {
-    const [board, setBoard] = useState([null, null, null, null, null, null, null, null, null]);
+    const {state, dispatch} = useContext(GameContext)
 
     useEffect(() => {
         socket.on('tictactoe', (data) => {
@@ -42,7 +43,7 @@ function Board() {
 
     return (
         <div className="board">
-            {board.map((value, idx) =>
+            {state.board.map((value, idx) =>
                 <Square key={idx}
                         idx={idx}
                         value={valueHelper(value)}
