@@ -1,3 +1,4 @@
+import uuid
 from typing import List
 from typing import Optional
 
@@ -55,10 +56,14 @@ class Game:
     __players = {}
     __spectators = []
     __status = 0  # 0 -> waiting for players, 1 -> running, 2-> ended
+    __uuid: str
+    __winner: Optional[str]
 
     def __init__(self) -> None:
         super().__init__()
         self.__board = Board()
+        self.__uuid = str(uuid.uuid4())
+        self.__winner = None
         self.reset()
 
     def reset(self) -> None:
@@ -68,6 +73,15 @@ class Game:
         }
         self.__spectators = []
         self.__board.reset()
+
+    def get_uuid(self) -> str:
+        return self.__uuid
+
+    def get_winner(self) -> Optional[str]:
+        return self.__winner
+
+    def set_winner(self, winner: str) -> None:
+        self.__winner = winner
 
     def get_status(self) -> int:
         return self.__status

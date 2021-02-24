@@ -26,10 +26,26 @@ const reducer = (state, action) => {
         ...state
     }
 
+    switch (action.type) {
+        case 'set-game':
+            result = {...action.payload}
+            break
+        case 'claim-square':
+            const newBoard = [...result.board]
+            newBoard.splice(action.payload.i, 1, action.payload.p)
+            result.board = newBoard
+            console.log(newBoard)
+            break
+    }
     return result
 }
+
+const claimSquareAction = ({i, p}) => ({type: 'claim-square', payload: {i: i, p: p}})
+const setGameAction = (game) => ({type: 'set-game', payload: game})
 
 export {
     Context,
     ContextProvider,
+    claimSquareAction,
+    setGameAction
 }

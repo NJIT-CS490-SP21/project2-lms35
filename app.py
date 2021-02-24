@@ -44,6 +44,7 @@ def handle_login():
     if not username:
         return {"error": "bad_request"}, 400
     session['username'] = username
+    session['uuid'] = game.get_uuid()
 
     if game.get_player_count() == 2:
         game.add_spectator(Spectator(username))
@@ -64,7 +65,7 @@ def handle_login():
 
 # get current login session
 def get_login():
-    if 'username' in session:
+    if 'username' in session and 'uuid' in session and session['uuid'] == game.get_uuid():
         return {"username": session['username']}, 200
     else:
         return {"error": "unauthorized"}, 401
@@ -84,8 +85,10 @@ def get_game():
             board.append(square)
 
     return {
+        'uuid': game.get_uuid(),
         'status': game.get_status(),
-        'board': board
+        'board': board,
+        'winner': game.get_winner()
     }
 
 
@@ -103,9 +106,15 @@ def on_disconnect():
         socketio.emit('game', get_game(), broadcast=True, include_self=False)
 
 
-@socketio.on('game')
-def on_chat(data):
-    socketio.emit('game', data, broadcast=True, include_self=False)
+@socketio.on('claim')
+def on_claim(data):
+    game.get_board().set_square(data['i'] // 3, data['i'] % 3, data['p'])
+    socketio.emit('claim', data, broadcast=True, include_self=False)
+    winner = game.get_board().check_win()
+    if winner:
+        game.set_status(2)
+        game.set_winner(winner)
+        socketio.emit('game', get_game(), broadcast=True, include_self=True)
 
 
 socketio.run(

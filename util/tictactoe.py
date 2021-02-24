@@ -8,9 +8,7 @@ def transpose(board) -> List[List]:
 
 def check_rows(board: List[List]) -> Optional[str]:
     for row in board:
-        row_set = set(row)
-        row_set.discard(None)
-        if len(row_set) == 1:
+        if len(set(row)) == 1:
             return row[0]
     return None
 

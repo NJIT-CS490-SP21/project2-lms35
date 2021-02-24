@@ -1,53 +1,44 @@
-import React, {useContext, useEffect, useState} from "react";
-import "../Board.css"
-import Square from "../Square";
-import {Context as GameContext} from "../context/game";
-import io from 'socket.io-client';
+import React, {useContext, useEffect} from "react";
+import "../assets/styles/Board.css"
+import Square from "./Square";
+import {claimSquareAction, Context as GameContext} from "../context/game";
+import {Context as UserContext} from "../context/user";
 
-const socket = io(); // Connects to socket connection
 
-function Board() {
+function Board({socket}) {
     const {state, dispatch} = useContext(GameContext)
+    const user = useContext(UserContext)
 
     useEffect(() => {
-        socket.on('tictactoe', (data) => {
-            console.log(data)
-            setBoard(board => {
-                let newBoard = [...board]
-                newBoard.splice(data['i'], 1, data['x'])
-                return newBoard
-            });
-        });
-    }, []);
+        console.log(state)
+    }, [state])
 
     const onClickHandler = (idx) => {
         return (e) => {
-            let newBoard = [...board]
-            newBoard.splice(idx, 1, !newBoard[idx])
-            setBoard(newBoard)
-            socket.emit('tictactoe', {i: idx, x: newBoard[idx]})
+            const payload = {i: idx, p: user.state.player}
+            dispatch(claimSquareAction(payload))
+            socket.emit('claim', payload)
         }
     }
 
     const valueHelper = (value) => {
         switch (value) {
             case null:
+                return ''
             default:
-                return '';
-            case false:
-                return 'O';
-            case true:
-                return 'X';
+                return value
         }
     }
 
     return (
         <div className="board">
-            {state.board.map((value, idx) =>
-                <Square key={idx}
-                        idx={idx}
-                        value={valueHelper(value)}
-                        onClick={onClickHandler(idx)}/>
+            {state.board.map((value, idx) => {
+                    console.log([idx, value])
+                    return <Square key={idx}
+                                   idx={idx}
+                                   value={valueHelper(value)}
+                                   onClick={onClickHandler(idx)}/>
+                }
             )}
         </div>
     );
