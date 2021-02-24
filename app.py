@@ -117,6 +117,13 @@ def on_claim(data):
         socketio.emit('game', get_game(), broadcast=True, include_self=True)
 
 
+@socketio.on('reset')
+def on_reset():
+    game.reset()
+    game.set_status(1)
+    socketio.emit('game', get_game(), broadcast=True, include_self=True)
+
+
 socketio.run(
     app,
     host=os.getenv('IP', '0.0.0.0'),

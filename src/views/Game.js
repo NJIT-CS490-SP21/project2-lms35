@@ -23,6 +23,10 @@ const Game = ({socket}) => {
     if (user.state.username == null)
         return <Login/>
 
+    const onClickReset = (e) => {
+        socket.emit('reset')
+    }
+
 
     return (<div>
         {user.state.type === 'spectator' && <h4>You are spectating.</h4>}
@@ -31,6 +35,7 @@ const Game = ({socket}) => {
         </div>}
         {game.state.status === 2 && <h3>Game Ended, {game.state.winner} is the winner!</h3>}
         {game.state.status > 0 && <Board socket={socket}/>}
+        {user.state.type === 'player' && game.state.status === 2 && <button onClick={onClickReset}>Play Again</button>}
     </div>)
 
 }

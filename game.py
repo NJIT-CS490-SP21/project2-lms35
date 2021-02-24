@@ -63,7 +63,6 @@ class Game:
         super().__init__()
         self.__board = Board()
         self.__uuid = str(uuid.uuid4())
-        self.__winner = None
         self.reset()
 
     def reset(self) -> None:
@@ -73,6 +72,8 @@ class Game:
         }
         self.__spectators = []
         self.__board.reset()
+        self.__winner = None
+        self.__status = 0
 
     def get_uuid(self) -> str:
         return self.__uuid

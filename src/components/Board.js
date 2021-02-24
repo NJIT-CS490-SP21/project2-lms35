@@ -6,19 +6,22 @@ import {Context as UserContext} from "../context/user";
 
 
 function Board({socket}) {
-    const {state, dispatch} = useContext(GameContext)
+    const game = useContext(GameContext)
     const user = useContext(UserContext)
 
-    useEffect(() => {
-        console.log(state)
-    }, [state])
-
     const onClickHandler = (idx) => {
-        return (e) => {
-            const payload = {i: idx, p: user.state.player}
-            dispatch(claimSquareAction(payload))
-            socket.emit('claim', payload)
+        switch (user.state.type) {
+            case 'player':
+                return (e) => {
+                    const payload = {i: idx, p: user.state.player}
+                    game.dispatch(claimSquareAction(payload))
+                    socket.emit('claim', payload)
+                }
+            default:
+                return (e) => {
+                }
         }
+
     }
 
     const valueHelper = (value) => {
@@ -32,7 +35,7 @@ function Board({socket}) {
 
     return (
         <div className="board">
-            {state.board.map((value, idx) => {
+            {game.state.board.map((value, idx) => {
                     console.log([idx, value])
                     return <Square key={idx}
                                    idx={idx}
