@@ -4,12 +4,16 @@ from html import escape
 from flask import Flask, send_from_directory, json, session, request, make_response, Response, jsonify
 from flask_socketio import SocketIO
 from flask_cors import CORS
+from flask_sqlalchemy import SQLAlchemy
 
 from game import Spectator, Game, Player
 
 # app setup with secret key for session
 app = Flask(__name__, static_folder='./build/static')
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'secret!')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
 socketio = SocketIO(
     app,
@@ -17,6 +21,7 @@ socketio = SocketIO(
     json=json,
     manage_session=False
 )
+db = SQLAlchemy(app)
 
 # setup the game
 game = Game()
