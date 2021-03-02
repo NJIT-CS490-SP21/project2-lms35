@@ -14,6 +14,14 @@ class Player(db.Model):
     def __repr__(self):
         return '<Player %r>' % self.username
 
+    def toJSON(self):
+        return {
+            'username': self.username,
+            'wins': self.wins,
+            'losses': self.losses,
+            'score': self.score
+        }
+
 
 class GameStatus(enum.Enum):
     undefined = 0

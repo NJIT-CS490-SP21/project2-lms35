@@ -89,7 +89,7 @@ def get_login():
 # get current game state
 @app.route('/leaderboard', methods=['GET'])
 def route_leaderboard():
-    return {'players': models.Player.query.all()}
+    return {'players': list(map(lambda p: p.toJSON(), models.Player.query.order_by(models.Player.score).all()))}
 
 
 # get current game state
