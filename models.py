@@ -1,4 +1,6 @@
-from app import db
+from sqlalchemy import func
+
+from db import db
 import enum
 
 
@@ -7,6 +9,7 @@ class Player(db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     wins = db.Column(db.Integer, nullable=False, default=0)
     losses = db.Column(db.Integer, nullable=False, default=0)
+    score = db.Column(db.Integer, nullable=False, default=100)
 
     def __repr__(self):
         return '<Player %r>' % self.username

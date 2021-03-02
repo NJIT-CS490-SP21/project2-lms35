@@ -1,18 +1,28 @@
 import os
 from html import escape
 
-from flask import Flask, send_from_directory, json, session, request, make_response, Response, jsonify
-from flask_socketio import SocketIO
+from dotenv import load_dotenv
+from flask import Flask, send_from_directory, json, session, request
 from flask_cors import CORS
-from flask_sqlalchemy import SQLAlchemy
+from flask_socketio import SocketIO
 
+import models
+from db import db
 from game import Spectator, Game, Player
+
+# load .env for testing
+load_dotenv()
 
 # app setup with secret key for session
 app = Flask(__name__, static_folder='./build/static')
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'secret!')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# init db
+db.init_app(app)
+with app.app_context():
+    db.create_all()
 
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
 socketio = SocketIO(
@@ -21,8 +31,6 @@ socketio = SocketIO(
     json=json,
     manage_session=False
 )
-db = SQLAlchemy(app)
-
 # setup the game
 game = Game()
 game.reset()
@@ -42,6 +50,8 @@ def login():
     else:
         return get_login()
 
+
+# TODO: Handle logout
 
 # create a new session or restart a session
 def handle_login():
@@ -74,6 +84,12 @@ def get_login():
         return {"username": session['username']}, 200
     else:
         return {"error": "unauthorized"}, 401
+
+
+# get current game state
+@app.route('/leaderboard', methods=['GET'])
+def route_leaderboard():
+    return {'players': models.Player.query.all()}
 
 
 # get current game state
