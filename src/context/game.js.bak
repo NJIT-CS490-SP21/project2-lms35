@@ -1,8 +1,8 @@
 import React, {useReducer} from 'react'
 
 const initialContext = {
-    current: null,
-    user_type: null // 1 => player_x, 2=> player_y, 3=> spectator
+    'status': null,
+    'board': [null, null, null, null, null, null, null, null, null]
 }
 
 const initState = () => {
@@ -28,11 +28,7 @@ const reducer = (state, action) => {
 
     switch (action.type) {
         case 'set-game':
-            if (action.payload.game === null)
-                result['current'] = null
-            else
-                result['current'] = {...action.payload.game}
-            result['user_type'] = action.payload.user_type
+            result = {...action.payload}
             break
         case 'claim-square':
             const newBoard = [...result.board]
@@ -45,7 +41,7 @@ const reducer = (state, action) => {
 }
 
 const claimSquareAction = ({i, p}) => ({type: 'claim-square', payload: {i: i, p: p}})
-const setGameAction = (game, user_type) => ({type: 'set-game', payload: {game: game, user_type: user_type}})
+const setGameAction = (game) => ({type: 'set-game', payload: game})
 
 export {
     Context,

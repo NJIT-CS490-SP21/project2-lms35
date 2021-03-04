@@ -1,12 +1,12 @@
 import Board from "../components/Board";
 import {useContext, useEffect, useState} from "react";
-import {claimSquareAction, Context as GameContext, setGameAction} from "../context/game";
+import {claimSquareAction, Context as GameContext, setGameAction} from "../context/game.js";
 import {Context as UserContext} from "../context/user";
 import Login from "./Login";
 import {getGameApi} from "../api/api";
 import Leaderboard from "../components/Leaderboard";
 
-const Game = ({socket}) => {
+const Game = ({socket, onClickLeave}) => {
     // const {gameState} = useContext(GameContext)
     const user = useContext(UserContext)
     const game = useContext(GameContext)
@@ -30,7 +30,9 @@ const Game = ({socket}) => {
         socket.emit('reset')
     }
 
+
     return (<div>
+        <button onClick={onClickLeave}>Leave Game</button>
         {!showLeaderboard && <button onClick={(e) => (setShowLeaderboard(true))}>Show Leaderboard</button>}
         {showLeaderboard && <button onClick={(e) => (setShowLeaderboard(false))}>Hide Leaderboard</button>}
         {showLeaderboard && <Leaderboard socket={socket}/>}

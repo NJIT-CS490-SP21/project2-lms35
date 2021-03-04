@@ -1,7 +1,6 @@
-from sqlalchemy import func
+import enum
 
 from db import db
-import enum
 
 
 class Player(db.Model):
@@ -29,6 +28,16 @@ class GameStatus(enum.Enum):
     running = 2
     finished = 3
 
+    def to_str(value):
+        if value == GameStatus.running:
+            return 'running'
+        elif value == GameStatus.waiting_for_players:
+            return 'waiting_for_players'
+        elif value == GameStatus.finished:
+            return 'finished'
+        else:
+            return 'undefined'
+
 
 class Game(db.Model):
     id = db.Column(db.String(36), primary_key=True, nullable=False)  # UUIDv4 game id
@@ -36,7 +45,19 @@ class Game(db.Model):
     player_x = db.Column(db.String(80))
     player_o = db.Column(db.String(80))
     winner = db.Column(db.String(80))
-    squares = db.Column(db.ARRAY(db.Integer), nullable=False, default=[])
+    squares = db.Column(db.ARRAY(db.CHAR), nullable=False, default=[[None, None, None],
+                                                                    [None, None, None],
+                                                                    [None, None, None], ])
 
     def __repr__(self):
         return '<Game %r>' % self.id
+
+    def toJSON(self):
+        return {
+            'id': self.id,
+            'status': GameStatus.to_str(self.status),
+            'player_x': self.player_x,
+            'player_o': self.player_o,
+            'winner': self.winner,
+            'squares': self.squares
+        }

@@ -28,7 +28,7 @@ const Leaderboard = ({socket}) => {
             </tr>
             </thead>
             <tbody>
-            {state.players.map((row) => <LeaderboardEntry
+            {state.players.map((row) => <LeaderboardEntry key={row.username}
                 username={row.username}
                 score={row.score}
                 isMe={row.username === user.username}/>

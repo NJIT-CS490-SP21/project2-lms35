@@ -42,9 +42,45 @@ const getLeaderboardApi = () => {
         .then(response => response.json())
 }
 
+
+const getGamesApi = () => {
+    return fetch('/games', {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json'
+        }
+    })
+        .then(response => response.json())
+}
+
+
+const createGameApi = () => {
+    return fetch('/games', {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json'
+        }
+    })
+        .then(response => response.json())
+}
+
+
+const updateGamePlayersApi = (game_id) => {
+    return fetch('/games/' + game_id, {
+        method: 'PUT',
+        headers: {
+            'Accept': 'application/json'
+        }
+    })
+        .then(response => response.json())
+}
+
 export {
     loginApi,
     getGameApi,
     getSessionApi,
-    getLeaderboardApi
+    getLeaderboardApi,
+    getGamesApi,
+    createGameApi,
+    updateGamePlayersApi
 }

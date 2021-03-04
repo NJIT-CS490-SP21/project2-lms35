@@ -1,7 +1,7 @@
 import React, {useContext, useEffect} from "react";
 import "../assets/styles/Board.css"
 import Square from "./Square";
-import {claimSquareAction, Context as GameContext} from "../context/game";
+import {claimSquareAction, Context as GameContext} from "../context/game.js";
 import {Context as UserContext} from "../context/user";
 
 
@@ -14,8 +14,10 @@ function Board({socket}) {
             case 'player':
                 return (e) => {
                     const payload = {i: idx, p: user.state.player}
-                    game.dispatch(claimSquareAction(payload))
-                    socket.emit('claim', payload)
+                    if (turnCheck()) {
+                        game.dispatch(claimSquareAction(payload))
+                        socket.emit('claim', payload)
+                    }
                 }
             default:
                 return (e) => {
@@ -31,6 +33,17 @@ function Board({socket}) {
             default:
                 return value
         }
+    }
+
+    const turnCheck = () => {
+        const x_count = game.state.board.reduce((val, acc) => acc + (val === 'x'))
+        return (
+            user.state.player === 'x' &&
+            x_count % 2 === 0
+        ) || (
+            user.state.player === 'o' &&
+            x_count % 2 === 1
+        )
     }
 
     return (
