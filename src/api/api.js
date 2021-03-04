@@ -31,8 +31,20 @@ const getGameApi = () => {
         .then(response => response.json())
 }
 
+
+const getLeaderboardApi = () => {
+    return fetch('/leaderboard', {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json'
+        }
+    })
+        .then(response => response.json())
+}
+
 export {
     loginApi,
     getGameApi,
-    getSessionApi
+    getSessionApi,
+    getLeaderboardApi
 }

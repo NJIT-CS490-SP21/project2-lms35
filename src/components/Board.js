@@ -36,7 +36,6 @@ function Board({socket}) {
     return (
         <div className="board">
             {game.state.board.map((value, idx) => {
-                    console.log([idx, value])
                     return <Square key={idx}
                                    idx={idx}
                                    value={valueHelper(value)}

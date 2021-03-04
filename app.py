@@ -61,6 +61,18 @@ def handle_login():
     session['username'] = username
     session['uuid'] = game.get_uuid()
 
+    # check if player already exists
+    player = models.Player.query.filter_by(username=username).first()
+    if not player:
+        # new player, add them
+        player = models.Player(username=username)
+        db.session.add(player)
+        db.session.commit()
+
+        # notify all leaderboard listeners
+        socketio.emit('leaderboard', get_leaderboard(), broadcast=True, include_self=False, namespace='/',
+                      skip_sid=True)
+
     if game.get_player_count() == 2:
         game.add_spectator(Spectator(username))
         session['type'] = 'spectator'
@@ -86,10 +98,14 @@ def get_login():
         return {"error": "unauthorized"}, 401
 
 
-# get current game state
+# get leaderboard
 @app.route('/leaderboard', methods=['GET'])
 def route_leaderboard():
-    return {'players': list(map(lambda p: p.toJSON(), models.Player.query.order_by(models.Player.score).all()))}
+    return {'players': get_leaderboard()}
+
+
+def get_leaderboard():
+    return list(map(lambda p: p.toJSON(), models.Player.query.order_by(models.Player.score).all()))
 
 
 # get current game state
@@ -116,7 +132,7 @@ def get_game():
 @socketio.on('connect')
 def on_connect():
     if 'type' in session and session['type'] == 'player' and game.get_status() == 0 and game.get_player_count() == 2:
-        game.set_status(1)
+        game.set_status(2)
         socketio.emit('game', get_game(), broadcast=True, include_self=False)
 
 
@@ -133,7 +149,7 @@ def on_claim(data):
     socketio.emit('claim', data, broadcast=True, include_self=False)
     winner = game.get_board().check_win()
     if winner:
-        game.set_status(2)
+        game.set_status(3)
         game.set_winner(winner)
         socketio.emit('game', get_game(), broadcast=True, include_self=True)
 

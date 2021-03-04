@@ -36,6 +36,7 @@ class Game(db.Model):
     player_x = db.Column(db.String(80))
     player_o = db.Column(db.String(80))
     winner = db.Column(db.String(80))
+    squares = db.Column(db.ARRAY(db.Integer), nullable=False, default=[])
 
     def __repr__(self):
         return '<Game %r>' % self.id
