@@ -38,7 +38,6 @@ const reducer = (state, action) => {
             const newBoard = [...result.current.squares]
             newBoard[action.payload.i][action.payload.j] = (action.payload.u === 1 ? 'x' : 'o')
             result.current.squares = newBoard
-            console.log(newBoard)
             break
     }
     return result
@@ -46,7 +45,6 @@ const reducer = (state, action) => {
 
 const claimSquareAction = ({i, j, u}) => ({type: 'claim-square', payload: {i: i, j: j, u: u}})
 const setGameAction = (game, user_type) => {
-    console.log('set game')
     return {type: 'set-game', payload: {game: game, user_type: user_type}}
 }
 

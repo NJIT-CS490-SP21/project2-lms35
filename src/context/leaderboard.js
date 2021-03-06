@@ -32,12 +32,10 @@ const reducer = (state, action) => {
             break
     }
 
-    console.log(result)
     return result
 }
 
 const updateLeaderboardAction = (leaderboard) => {
-    console.log(leaderboard)
     return {type: 'update', payload: leaderboard}
 }
 

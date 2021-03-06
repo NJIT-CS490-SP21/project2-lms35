@@ -43,7 +43,7 @@ function Board({socket}) {
                 0),
             0) /* count the number of x's & o's using array reduce */
         return (move_count % 2 === 0 && game.state.user_type === 1) || /* player x goes when number of moves is even */
-            (move_count % 2 === 1 && game.state.user_type === 2) /* player o goes when numebr of moves is odd*/
+            (move_count % 2 === 1 && game.state.user_type === 2) /* player o goes when number of moves is odd*/
     }
 
     return (

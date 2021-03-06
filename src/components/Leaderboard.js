@@ -17,8 +17,6 @@ const Leaderboard = ({socket}) => {
         });
     }, []);
 
-    console.log(state.players)
-
     return (
         <table>
             <thead>

@@ -21,7 +21,7 @@ const Game = ({socket, onClickLeave}) => {
 
         // listen to changes on the game and update state
         socket.on('game', (data) => {
-            game.dispatch(setGameAction(data))
+            game.dispatch(setGameAction(data, game.state.user_type))
         });
 
         // listen to claim events on the squares and update state

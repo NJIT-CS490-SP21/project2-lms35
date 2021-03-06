@@ -23,9 +23,8 @@ const GamesList = ({socket}) => {
     // function to handle creating a new game
     const onClickCreate = (e) => {
         createGameApi().then(data => {
-            console.log(data)
             // set the game to the current game
-            game.dispatch(setGameAction(data))
+            game.dispatch(setGameAction(data, 1))
         })
     }
 
@@ -37,8 +36,8 @@ const GamesList = ({socket}) => {
                 user_type = 1 // we are player x
             else if (gameEntry.player_o === null) {
                 user_type = 2 // claim player o
-                updateGamePlayersApi(gameEntry.id).then(() => { // tell the server that we are player o
-                    game.dispatch(setGameAction(gameEntry, user_type)) // move to the game view
+                updateGamePlayersApi(gameEntry.id).then((data) => { // tell the server that we are player o
+                    game.dispatch(setGameAction(data.game, user_type)) // move to the game view
                 })
                 return
             } else if (gameEntry.player_o === user.state.username)
