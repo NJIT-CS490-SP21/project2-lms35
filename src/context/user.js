@@ -3,7 +3,7 @@ import React, {useReducer} from 'react'
 const initialContext = {
     "losses": 0,
     "score": 0,
-    "username": "",
+    "username": null,
     "wins": 0
 }
 

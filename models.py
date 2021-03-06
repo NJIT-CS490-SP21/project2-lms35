@@ -1,4 +1,6 @@
+import datetime
 import enum
+import uuid
 
 from db import db
 
@@ -41,13 +43,17 @@ class GameStatus(enum.Enum):
 
 class Game(db.Model):
     id = db.Column(db.String(36), primary_key=True, nullable=False)  # UUIDv4 game id
-    status = db.Column(db.Enum(GameStatus), nullable=False, default=GameStatus.undefined)
-    player_x = db.Column(db.String(80))
-    player_o = db.Column(db.String(80))
-    winner = db.Column(db.String(80))
-    squares = db.Column(db.ARRAY(db.CHAR), nullable=False, default=[[None, None, None],
-                                                                    [None, None, None],
-                                                                    [None, None, None], ])
+    status = db.Column(db.Enum(GameStatus), nullable=False,
+                       default=GameStatus.undefined)  # enum status for game
+    player_x = db.Column(db.String(80))  # player o's username
+    player_o = db.Column(db.String(80))  # player o's username
+    winner = db.Column(db.String(80))  # winner's username, null until there is one
+    squares = db.Column(db.ARRAY(db.CHAR),
+                        nullable=False,
+                        default=[[None, None, None],
+                                 [None, None, None],
+                                 [None, None, None], ])  # 3x3 square
+    created_date = db.Column(db.DateTime, default=datetime.datetime.utcnow)  # create date to order newest ones first
 
     def __repr__(self):
         return '<Game %r>' % self.id
@@ -61,3 +67,68 @@ class Game(db.Model):
             'winner': self.winner,
             'squares': self.squares
         }
+
+
+def get_leaderboard() -> list:
+    """
+    Helper function to get leaderboard from database and process it
+    :return:
+    """
+    return list(map(lambda p: p.toJSON(), Player.query.order_by(Player.score).all()))
+
+
+def get_games() -> list:
+    """
+    Get list of games from the database and return as a list of dictionaries
+    :return:
+    """
+    return list(map(lambda g: g.toJSON(), Game.query.order_by(Game.created_date.desc()).all()))
+
+
+def create_game(player_x_username: str) -> dict:
+    """
+    Create a game and persist it in the database
+    :return:
+    """
+
+    # create game model
+    game = Game(
+        id=str(uuid.uuid4()),
+        status=GameStatus.waiting_for_players,
+        player_x=player_x_username,
+    )
+
+    # save in database
+    db.session.add(game)
+    db.session.commit()
+
+    return game.toJSON()
+
+
+def set_game_player_o(game_id, username) -> dict:
+    Game.query.filter_by(id=game_id).update(dict(
+        player_o=username,
+        status=GameStatus.running
+    ))
+    db.session.commit()
+    return Game.query.filter_by(id=game_id).first().toJSON()
+
+
+def set_game_square(game_id: str, i: int, j: int, player: str) -> dict:
+    game = Game.query.filter_by(id=game_id).first()
+    game.squares[i][j] = player
+    Game.query.filter_by(id=game_id).update(dict(squares=game.squares))
+    db.session.commit()
+    return game.toJSON()
+
+
+def set_game_winner(game_id: str, winner: str) -> dict:
+    game = Game.query.filter_by(id=game_id).first()
+    game.winner = winner
+    game.status = GameStatus.finished
+    Game.query.filter_by(id=game_id).update(dict(
+        winner=game.winner,
+        status=game.status
+    ))
+    db.session.commit()
+    return game.toJSON()

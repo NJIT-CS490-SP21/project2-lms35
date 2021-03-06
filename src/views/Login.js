@@ -9,7 +9,10 @@ const Login = (props) => {
     const [value, setValue] = useState('')
 
     useEffect(() => {
-        getSessionApi().then(data => dispatch(loginAction(data)))
+        getSessionApi().then(data => {
+            if (data['error'] === undefined)
+                dispatch(loginAction(data))
+        })
     }, [])
 
     const onClick = (e) => {

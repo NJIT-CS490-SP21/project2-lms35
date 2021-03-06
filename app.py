@@ -1,17 +1,16 @@
 import os
-import uuid
 from html import escape
 
 from dotenv import load_dotenv
 from flask import Flask, send_from_directory, json, session, request
 from flask_cors import CORS
-from flask_socketio import SocketIO, join_room, leave_room
+from flask_socketio import SocketIO, join_room, leave_room, send
 
 import models
 from db import db
-from game import Game
-
 # load .env for testing
+from util import tictactoe
+
 load_dotenv()
 
 # app setup with secret key for session
@@ -32,9 +31,6 @@ socketio = SocketIO(
     json=json,
     manage_session=False
 )
-# setup the game
-game = Game()
-game.reset()
 
 
 @app.route('/', defaults={"filename": "index.html"})
@@ -66,7 +62,6 @@ def handle_login():
     if not username:
         return {"error": "bad_request"}, 400
     session['username'] = username
-    session['uuid'] = game.get_uuid()
 
     # check if player already exists
     player = models.Player.query.filter_by(username=username).first()
@@ -77,7 +72,7 @@ def handle_login():
         db.session.commit()
 
         # notify all leaderboard listeners
-        socketio.emit('leaderboard', get_leaderboard(), broadcast=True, include_self=False, namespace='/',
+        socketio.emit('leaderboard', models.get_leaderboard(), broadcast=True, include_self=False, namespace='/',
                       skip_sid=True)
 
     return player.toJSON()
@@ -102,7 +97,7 @@ def handle_login():
 
 # get current login session
 def get_login():
-    if 'username' in session and 'uuid' in session and session['uuid'] == game.get_uuid():
+    if 'username' in session:
         return {"username": session['username']}, 200
     else:
         return {"error": "unauthorized"}, 401
@@ -111,67 +106,26 @@ def get_login():
 # get leaderboard
 @app.route('/leaderboard', methods=['GET'])
 def route_leaderboard():
-    return {'players': get_leaderboard()}
-
-
-def get_leaderboard():
-    return list(map(lambda p: p.toJSON(), models.Player.query.order_by(models.Player.score).all()))
-
-
-# get current game state
-@app.route('/game', methods=['GET'])
-def route_game_old():
-    return get_game_bak()
+    return {'players': models.get_leaderboard()}
 
 
 @app.route('/games', methods=['GET', 'POST'])
 def route_games():
     if request.method == 'POST':
-        return create_game(session['username'])
+        game = models.create_game(session['username'])  # create the game in the db
+        socketio.emit('games', game, broadcast=True, include_self=False, namespace='/',
+                      skip_sid=True)  # alert clients that a new game has been added
+        return game
     else:
-        return {'games': get_games()}
-
-
-def get_games():
-    """
-    Get list of games from the database and return as a list of dictionaries
-    :return:
-    """
-    return list(map(lambda g: g.toJSON(), models.Game.query.all()))
-
-
-def create_game(player_x_username: str):
-    """
-    Create a game and persist it in the database
-    :return:
-    """
-
-    # create game model
-    game = models.Game(
-        id=str(uuid.uuid4()),
-        status=models.GameStatus.waiting_for_players,
-        player_x=player_x_username,
-    )
-
-    # save in database
-    db.session.add(game)
-    db.session.commit()
-
-    # alert clients that a new game has been added
-    socketio.emit('games', game.toJSON(), broadcast=True, include_self=False, namespace='/',
-                  skip_sid=True)
-
-    return game.toJSON()
+        return {'games': models.get_games()}
 
 
 @app.route('/games/<game_id>', methods=['GET', 'PUT'])
 def route_game(game_id):
     if request.method == 'PUT':  # inferring this to mean join to play
-        models.Game.query.filter_by(id=game_id).update(dict(
-            player_o=session['username'],
-            # status=models.GameStatus.running
-        ))
-        db.session.commit()
+        game = models.set_game_player_o(game_id, session['username'])  # set player o on the game
+        socketio.emit('game', game, room=game['id'])  # tell the players of the game that it has started
+        # socketio.emit('games', game.toJSON(), broadcast=True, include_self=False, namespace='/', skip_sid=True) # tell everyone to update their games list
         return {'player_o': session['username']}
     else:
         game = get_game(game_id)
@@ -181,68 +135,37 @@ def route_game(game_id):
 
 
 def get_game(id):
+    """
+    Helper function to simply getting games by id
+    :param id:
+    :return:
+    """
     return models.Game.query.filter_by(id=id).first()
-
-
-def get_game_bak():
-    rows = game.get_board().get_all_squares()
-    board = []
-    for row in rows:
-        for square in row:
-            board.append(square)
-
-    return {
-        'uuid': game.get_uuid(),
-        'status': game.get_status(),
-        'board': board,
-        'winner': game.get_winner()
-    }
-
-
-@socketio.on('connect')
-def on_connect():
-    if 'type' in session and session['type'] == 'player' and game.get_status() == 0 and game.get_player_count() == 2:
-        game.set_status(2)
-        socketio.emit('game', get_game_bak(), broadcast=True, include_self=False)
-
-
-@socketio.on('disconnect')
-def on_disconnect():
-    if 'type' in session and session['type'] == 'player' and game.get_status() == 1 and game.get_player_count() == 2:
-        # game.set_status(0)
-        socketio.emit('game', get_game_bak(), broadcast=True, include_self=False)
 
 
 @socketio.on('claim')
 def on_claim(data):
-    game.get_board().set_square(data['i'] // 3, data['i'] % 3, data['p'])
-    socketio.emit('claim', data, broadcast=True, include_self=False)
-    winner = game.get_board().check_win()
+    game_id = data['channel']
+    game = models.set_game_square(game_id, data['i'], data['j'], ('x' if data['u'] == 1 else 'o'))
+    socketio.emit('claim', data, room=game_id)
+    winner = tictactoe.check_win(game['squares'])
     if winner:
-        game.set_status(3)
-        game.set_winner(winner)
-        socketio.emit('game', get_game_bak(), broadcast=True, include_self=True)
+        game = models.set_game_winner(game_id, (game['player_x'] if winner == 'x' else game['player_o']))
+        socketio.emit('game', game, broadcast=True, include_self=True)
 
 
-@socketio.on('reset')
-def on_reset():
-    game.reset()
-    game.set_status(1)
-    socketio.emit('game', get_game_bak(), broadcast=True, include_self=True)
-
-
-@socketio.on('join')
-def on_join(data):
-    username = data['username']
-    room = data['room']
+@socketio.on('subscribe')
+def on_subscribe(game_id):
+    username = session['username']
+    room = game_id
     join_room(room)
     send(username + ' has entered the room.', room=room)
 
 
-@socketio.on('leave')
-def on_leave(data):
-    username = data['username']
-    room = data['room']
+@socketio.on('unsubscribe')
+def on_unsubscribe(game_id):
+    username = session['username']
+    room = game_id
     leave_room(room)
     send(username + ' has left the room.', room=room)
 
