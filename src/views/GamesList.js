@@ -58,39 +58,36 @@ const GamesList = ({socket}) => {
         game.dispatch(setCurrent(null, null))
     }
 
-    return (<>
-        {user.state.username === null && <Login/>} {/* show login view if they aren't logged in already */}
-        {user.state.username !== null && <> {/* otherwise show the rest */}
-            {!showLeaderboard && <button onClick={(e) => (setShowLeaderboard(true))}>Show Leaderboard</button>}
-            {showLeaderboard && <button onClick={(e) => (setShowLeaderboard(false))}>Hide Leaderboard</button>}
-            {showLeaderboard && <Leaderboard socket={socket}/>}
-            {game.state.current === null && <div>
-                <h2>Games</h2>
-                <button onClick={onClickCreate}>Create new Game</button>
-                <table>
-                    <thead>
-                    <tr style={{textAlign: "left"}}>
-                        <td>Player X</td>
-                        <td>Player O</td>
-                        <td>Status</td>
-                        <td>Winner</td>
-                        <td/>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {Object.values(games.state.games).map((gameEntry) =>
-                        <GamesListEntry key={gameEntry.id}
-                                        status={gameEntry.status}
-                                        player_x={gameEntry.player_x}
-                                        player_o={gameEntry.player_o}
-                                        winner={gameEntry.winner}
-                                        onClickJoin={thunkOnClickJoin(gameEntry)}/>
-                    )}
-                    </tbody>
-                </table>
-            </div>}
-            {game.state.current !== null && <Game socket={socket} onClickLeave={onClickLeave}/>}
-        </>}
+    return (<> {/* otherwise show the rest */}
+        {!showLeaderboard && <button onClick={(e) => (setShowLeaderboard(true))}>Show Leaderboard</button>}
+        {showLeaderboard && <button onClick={(e) => (setShowLeaderboard(false))}>Hide Leaderboard</button>}
+        {showLeaderboard && <Leaderboard socket={socket}/>}
+        {game.state.current === null && <div>
+            <h2>Games</h2>
+            <button onClick={onClickCreate}>Create new Game</button>
+            <table>
+                <thead>
+                <tr style={{textAlign: "left"}}>
+                    <td>Player X</td>
+                    <td>Player O</td>
+                    <td>Status</td>
+                    <td>Winner</td>
+                    <td/>
+                </tr>
+                </thead>
+                <tbody>
+                {Object.values(games.state.games).map((gameEntry) =>
+                    <GamesListEntry key={gameEntry.id}
+                                    status={gameEntry.status}
+                                    player_x={gameEntry.player_x}
+                                    player_o={gameEntry.player_o}
+                                    winner={gameEntry.winner}
+                                    onClickJoin={thunkOnClickJoin(gameEntry)}/>
+                )}
+                </tbody>
+            </table>
+        </div>}
+        {game.state.current !== null && <Game socket={socket} onClickLeave={onClickLeave}/>}
     </>)
 
 }

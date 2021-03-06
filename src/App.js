@@ -5,7 +5,7 @@ import {ContextProvider as GameContextProvider} from "./context/game.js";
 import {ContextProvider as UserContextProvider} from "./context/user.js";
 import {ContextProvider as LeaderboardContextProvider} from "./context/leaderboard";
 import io from "socket.io-client";
-import GamesList from "./views/GamesList";
+import Login from "./views/Login";
 
 const socket = io(); // Connects to socket connection
 
@@ -17,7 +17,7 @@ function App() {
                     <LeaderboardContextProvider>
                         <div className="App">
                             <header className="App-header">
-                                <GamesList socket={socket}/>
+                                <Login socket={socket}/>
                             </header>
                         </div>
                     </LeaderboardContextProvider>

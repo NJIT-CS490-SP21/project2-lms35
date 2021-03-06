@@ -120,18 +120,12 @@ def on_claim(data):
 
 @socketio.on('subscribe')
 def on_subscribe(game_id):
-    username = session['username']
-    room = game_id
-    join_room(room)
-    send(username + ' has entered the room.', room=room)
+    join_room(game_id)
 
 
 @socketio.on('unsubscribe')
 def on_unsubscribe(game_id):
-    username = session['username']
-    room = game_id
-    leave_room(room)
-    send(username + ' has left the room.', room=room)
+    leave_room(game_id)
 
 
 socketio.run(
