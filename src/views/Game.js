@@ -3,15 +3,10 @@ import {useContext, useEffect} from "react";
 import {claimSquareAction, Context as GameContext, setCurrent} from "../context/game.js";
 
 const Game = ({socket, onClickLeave}) => {
-    // const user = useContext(UserContext)
     const game = useContext(GameContext)
 
 
     useEffect(() => {
-
-        // read the current state of the game on load
-        // getGameApi().then(data => game.dispatch(setGameAction(data)))
-
         // subscribe to current game room
         socket.emit("subscribe", game.state.current.id);
 
@@ -28,14 +23,19 @@ const Game = ({socket, onClickLeave}) => {
     }, []);
 
     return (<div>
-        <button onClick={onClickLeave}>Leave Game</button>
         {game.state.user_type === 3 && <h4>You are spectating.</h4>}
         {game.state.current.status === 'waiting_for_players' && <div>
             <h2>Waiting for more players to join...</h2>
         </div>}
-        {game.state.current.status === 'finished' && <h3>Game Ended, {game.state.current.winner} is the winner!</h3>}
+        {game.state.current.status === 'finished' && game.state.current.winner !== null &&
+        <h3>Game Ended, {game.state.current.winner} is the winner!</h3>}
+        {game.state.current.status === 'finished' && game.state.current.winner === null &&
+        <h3>Game Ended in a tie.</h3>}
         <Board socket={socket}/>
-        {/*{user.state.type === 'player' && game.state.status === 2 && <button onClick={onClickReset}>Play Again</button>}*/}
+        <div style={{marginTop: '10px'}}>
+            <button
+                onClick={onClickLeave}>{(game.state.current.status === 'finished') ? "Return and Play Another" : "Leave Game"}</button>
+        </div>
     </div>)
 
 }

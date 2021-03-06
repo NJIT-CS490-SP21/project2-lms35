@@ -2,7 +2,7 @@ import os
 from html import escape
 
 from flask import request, send_from_directory, session
-from flask_socketio import join_room, leave_room, send
+from flask_socketio import join_room, leave_room
 
 import factories
 import models
@@ -110,12 +110,17 @@ def on_claim(data):
     game = models.set_game_square(game_id, data['i'], data['j'], ('x' if data['u'] == 1 else 'o'))
     socketio.emit('claim', data, room=game_id)
     winner = tictactoe.check_win(game['squares'])
+    moves = tictactoe.count_moves(game['squares'])
     if winner:
         game = models.set_game_winner(game_id, winner)  # set the game's winner and update scores
         socketio.emit('leaderboard', broadcast=True, include_self=False, namespace='/',
                       skip_sid=True)  # tell everyone to update their leaderboards
         socketio.emit('games', game, broadcast=True, include_self=True)
         socketio.emit('game', game, room=game_id)
+    elif moves == 9:
+        game = models.set_game_tie(game_id)  # set the game to a tie
+        socketio.emit('games', game, broadcast=True, include_self=True)  # notify everyone that game is finished
+        socketio.emit('game', game, room=game_id)  # notify players that the game has ended
 
 
 @socketio.on('subscribe')

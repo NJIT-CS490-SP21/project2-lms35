@@ -1,12 +1,12 @@
 import {useContext, useEffect, useState} from "react";
 import {Context as UserContext} from "../context/user.js";
 import {Context as CurrentGameContext, setCurrent} from "../context/game.js";
-import {setGameAction, Context as GamesContext, setGamesListAction} from "../context/games.js";
-import Login from "./Login";
+import {Context as GamesContext, setGameAction, setGamesListAction} from "../context/games.js";
 import {createGameApi, getGamesApi, updateGamePlayersApi} from "../api/api";
 import GamesListEntry from "../components/GamesListEntry";
 import Game from "./Game";
 import Leaderboard from "../components/Leaderboard";
+import "../assets/styles/GamesList.css"
 
 const GamesList = ({socket}) => {
     const user = useContext(UserContext)
@@ -59,17 +59,20 @@ const GamesList = ({socket}) => {
     }
 
     return (<> {/* otherwise show the rest */}
-        {!showLeaderboard && <button onClick={(e) => (setShowLeaderboard(true))}>Show Leaderboard</button>}
-        {showLeaderboard && <button onClick={(e) => (setShowLeaderboard(false))}>Hide Leaderboard</button>}
-        {showLeaderboard && <Leaderboard socket={socket}/>}
+        <div>
+            <h2>Leaderboard</h2>
+            {!showLeaderboard && <button onClick={(e) => (setShowLeaderboard(true))}>Show Leaderboard</button>}
+            {showLeaderboard && <button onClick={(e) => (setShowLeaderboard(false))}>Hide Leaderboard</button>}
+            {showLeaderboard && <Leaderboard socket={socket}/>}
+        </div>
         {game.state.current === null && <div>
             <h2>Games</h2>
             <button onClick={onClickCreate}>Create new Game</button>
-            <table>
+            <table className="games-list">
                 <thead>
                 <tr style={{textAlign: "left"}}>
-                    <td>Player X</td>
-                    <td>Player O</td>
+                    <td>X</td>
+                    <td>O</td>
                     <td>Status</td>
                     <td>Winner</td>
                     <td/>

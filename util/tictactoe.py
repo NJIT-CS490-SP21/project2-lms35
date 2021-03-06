@@ -29,10 +29,9 @@ def check_win(board) -> Optional[str]:
     return check_diagonals(board)
 
 
-
-
-
-
-
-
-
+def count_moves(board) -> int:
+    count = 0
+    for row in board:
+        for sq in row:
+            count += int(sq is not None)
+    return count

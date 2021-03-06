@@ -31,7 +31,7 @@ const Leaderboard = ({socket}) => {
                 <LeaderboardEntry key={row.username}
                                   username={row.username}
                                   score={row.score}
-                                  isMe={row.username === user.username}/>
+                                  isMe={row.username === user.state.username}/>
             )}
             </tbody>
         </table>

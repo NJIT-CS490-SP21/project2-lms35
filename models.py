@@ -131,10 +131,6 @@ def set_game_winner(game_id: str, winner: str) -> dict:
 
     game.winner = winner_username
     game.status = GameStatus.finished
-    # Game.query.filter_by(id=game_id).update(dict(
-    #     winner=game.winner,
-    #     status=game.status
-    # ))  # update game in the database
     db.session.commit()
 
     winner = Player.query.filter_by(username=winner_username).first()  # get winner from database
@@ -147,4 +143,11 @@ def set_game_winner(game_id: str, winner: str) -> dict:
     loser.score -= 1
     db.session.commit()
 
+    return game.toJSON()
+
+
+def set_game_tie(game_id: str) -> dict:
+    game = Game.query.filter_by(id=game_id).first()  # get game from database
+    game.status = GameStatus.finished  # set status to finished
+    db.session.commit()
     return game.toJSON()
