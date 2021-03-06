@@ -125,7 +125,8 @@ def route_game(game_id):
     if request.method == 'PUT':  # inferring this to mean join to play
         game = models.set_game_player_o(game_id, session['username'])  # set player o on the game
         socketio.emit('game', game, room=game['id'])  # tell the players of the game that it has started
-        # socketio.emit('games', game, broadcast=True, include_self=False, namespace='/', skip_sid=True) # tell everyone to update their games list
+        socketio.emit('games', game, broadcast=True, include_self=False, namespace='/',
+                      skip_sid=True)  # tell everyone to update their games list
         return {'game': game}
     else:
         game = get_game(game_id)

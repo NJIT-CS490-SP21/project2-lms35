@@ -1,7 +1,7 @@
 import React, {useReducer} from 'react'
 
 const initialContext = {
-    'games': []
+    'games': {} /* index by id */
 }
 
 const initState = () => {
@@ -27,21 +27,29 @@ const reducer = (state, action) => {
 
     switch (action.type) {
         case 'set-list':
-            result['games'] = [...action.payload]
+            action.payload.forEach((gameEntry) => {
+                result['games'][gameEntry.id] = {...gameEntry}
+            })
             break
-        case 'add':
-            result['games'] = [action.payload, ...result.games]
+        case 'set':
+            if (result['games'][action.payload.id] !== undefined) {
+                result['games'][action.payload.id] = {...action.payload}
+            } else {
+                const temp = {}
+                temp[action.payload.id] = {...action.payload}
+                result['games'] = Object.assign(temp, result['games']) /* hacky way to get it to the top of the object */
+            }
             break
     }
     return result
 }
 
 const setGamesListAction = (games) => ({type: 'set-list', payload: games})
-const addGameAction = (game) => ({type: 'add', payload: game})
+const setGameAction = (game) => ({type: 'set', payload: game})
 
 export {
     Context,
     ContextProvider,
     setGamesListAction,
-    addGameAction
+    setGameAction
 }

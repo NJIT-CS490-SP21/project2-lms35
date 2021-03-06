@@ -44,7 +44,7 @@ const reducer = (state, action) => {
 }
 
 const claimSquareAction = ({i, j, u}) => ({type: 'claim-square', payload: {i: i, j: j, u: u}})
-const setGameAction = (game, user_type) => {
+const setCurrent = (game, user_type) => {
     return {type: 'set-game', payload: {game: game, user_type: user_type}}
 }
 
@@ -52,5 +52,5 @@ export {
     Context,
     ContextProvider,
     claimSquareAction,
-    setGameAction
+    setCurrent
 }

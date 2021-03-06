@@ -1,15 +1,11 @@
 import Board from "../components/Board";
-import {useContext, useEffect, useState} from "react";
-import {claimSquareAction, Context as GameContext, setGameAction} from "../context/game.js";
-// import {Context as UserContext} from "../context/user";
-import {getGameApi} from "../api/api";
-import Leaderboard from "../components/Leaderboard";
+import {useContext, useEffect} from "react";
+import {claimSquareAction, Context as GameContext, setCurrent} from "../context/game.js";
 
 const Game = ({socket, onClickLeave}) => {
     // const user = useContext(UserContext)
     const game = useContext(GameContext)
 
-    const [showLeaderboard, setShowLeaderboard] = useState(false)
 
     useEffect(() => {
 
@@ -21,7 +17,7 @@ const Game = ({socket, onClickLeave}) => {
 
         // listen to changes on the game and update state
         socket.on('game', (data) => {
-            game.dispatch(setGameAction(data, game.state.user_type))
+            game.dispatch(setCurrent(data, game.state.user_type))
         });
 
         // listen to claim events on the squares and update state
@@ -33,9 +29,6 @@ const Game = ({socket, onClickLeave}) => {
 
     return (<div>
         <button onClick={onClickLeave}>Leave Game</button>
-        {!showLeaderboard && <button onClick={(e) => (setShowLeaderboard(true))}>Show Leaderboard</button>}
-        {showLeaderboard && <button onClick={(e) => (setShowLeaderboard(false))}>Hide Leaderboard</button>}
-        {showLeaderboard && <Leaderboard socket={socket}/>}
         {game.state.user_type === 3 && <h4>You are spectating.</h4>}
         {game.state.current.status === 'waiting_for_players' && <div>
             <h2>Waiting for more players to join...</h2>
