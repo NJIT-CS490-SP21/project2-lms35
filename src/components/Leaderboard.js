@@ -10,11 +10,12 @@ const Leaderboard = ({socket}) => {
     const user = useContext(UserContext)
     const {state, dispatch} = useContext(LeaderboardContext)
 
+    const updateLeaderboard = () => getLeaderboardApi().then(data => dispatch(updateLeaderboardAction(data)))
+
     useEffect(() => {
-        getLeaderboardApi().then(data => dispatch(updateLeaderboardAction(data)))
-        socket.on('leaderboard', (data) => {
-            dispatch(updateLeaderboardAction(data))
-        });
+        // noinspection JSIgnoredPromiseFromCall
+        updateLeaderboard()
+        socket.on('leaderboard', updateLeaderboard);
     }, []);
 
     return (
@@ -26,10 +27,11 @@ const Leaderboard = ({socket}) => {
             </tr>
             </thead>
             <tbody>
-            {state.players.map((row) => <LeaderboardEntry key={row.username}
-                username={row.username}
-                score={row.score}
-                isMe={row.username === user.username}/>
+            {state.players.map((row) =>
+                <LeaderboardEntry key={row.username}
+                                  username={row.username}
+                                  score={row.score}
+                                  isMe={row.username === user.username}/>
             )}
             </tbody>
         </table>

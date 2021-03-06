@@ -1,36 +1,14 @@
 import os
 from html import escape
 
-from dotenv import load_dotenv
-from flask import Flask, send_from_directory, json, session, request
-from flask_cors import CORS
-from flask_socketio import SocketIO, join_room, leave_room, send
+from flask import request, send_from_directory, session
+from flask_socketio import join_room, leave_room, send
 
+import factories
 import models
-from db import db
-# load .env for testing
 from util import tictactoe
 
-load_dotenv()
-
-# app setup with secret key for session
-app = Flask(__name__, static_folder='./build/static')
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'secret!')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# init db
-db.init_app(app)
-with app.app_context():
-    db.create_all()
-
-cors = CORS(app, resources={r"/*": {"origins": "*"}})
-socketio = SocketIO(
-    app,
-    cors_allowed_origins="*",
-    json=json,
-    manage_session=False
-)
+app, cors, socketio, db = factories.create_app()
 
 
 @app.route('/', defaults={"filename": "index.html"})
@@ -48,7 +26,6 @@ def login():
         return get_login()
 
 
-# TODO: Handle logout
 # route to handle logout
 @app.route('/logout', methods=['GET'])
 def logout():
@@ -75,24 +52,7 @@ def handle_login():
         socketio.emit('leaderboard', models.get_leaderboard(), broadcast=True, include_self=False, namespace='/',
                       skip_sid=True)
 
-    return player.toJSON()
-
-    '''
-    if game.get_player_count() == 2:
-        game.add_spectator(Spectator(username))
-        session['type'] = 'spectator'
-    elif game.get_x_player() is None:
-        game.set_x_player(Player(username, 'X'))
-        session['type'] = 'player'
-        session['player'] = 'X'
-    else:
-        game.set_o_player(Player(username, 'O'))
-        session['type'] = 'player'
-        session['player'] = 'O'
-        game.set_status(1)
-        socketio.emit('game', get_game(), broadcast=True, include_self=False, namespace='/', skip_sid=True)
-    '''
-    return {k: v for k, v in session.items() if k in ('username', 'type', 'player')}, 201
+    return player.toJSON(), 201
 
 
 # get current login session
@@ -151,8 +111,11 @@ def on_claim(data):
     socketio.emit('claim', data, room=game_id)
     winner = tictactoe.check_win(game['squares'])
     if winner:
-        game = models.set_game_winner(game_id, (game['player_x'] if winner == 'x' else game['player_o']))
-        socketio.emit('game', game, broadcast=True, include_self=True)
+        game = models.set_game_winner(game_id, winner)  # set the game's winner and update scores
+        socketio.emit('leaderboard', broadcast=True, include_self=False, namespace='/',
+                      skip_sid=True)  # tell everyone to update their leaderboards
+        socketio.emit('games', game, broadcast=True, include_self=True)
+        socketio.emit('game', game, room=game_id)
 
 
 @socketio.on('subscribe')

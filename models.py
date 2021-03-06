@@ -2,12 +2,13 @@ import datetime
 import enum
 import uuid
 
-from db import db
+from flask_sqlalchemy import SQLAlchemy
+
+db = SQLAlchemy()
 
 
 class Player(db.Model):
-    id = db.Column(db.Integer, primary_key=True, nullable=False)
-    username = db.Column(db.String(80), unique=True, nullable=False)
+    username = db.Column(db.String(80), primary_key=True, nullable=False)
     wins = db.Column(db.Integer, nullable=False, default=0)
     losses = db.Column(db.Integer, nullable=False, default=0)
     score = db.Column(db.Integer, nullable=False, default=100)
@@ -74,7 +75,7 @@ def get_leaderboard() -> list:
     Helper function to get leaderboard from database and process it
     :return:
     """
-    return list(map(lambda p: p.toJSON(), Player.query.order_by(Player.score).all()))
+    return list(map(lambda p: p.toJSON(), Player.query.order_by(Player.score.desc()).all()))
 
 
 def get_games() -> list:
@@ -123,12 +124,27 @@ def set_game_square(game_id: str, i: int, j: int, player: str) -> dict:
 
 
 def set_game_winner(game_id: str, winner: str) -> dict:
-    game = Game.query.filter_by(id=game_id).first()
-    game.winner = winner
+    game = Game.query.filter_by(id=game_id).first()  # get game from database
+
+    winner_username = (game.player_x if winner == 'x' else game.player_o)
+    loser_username = (game.player_o if winner == 'x' else game.player_x)
+
+    game.winner = winner_username
     game.status = GameStatus.finished
-    Game.query.filter_by(id=game_id).update(dict(
-        winner=game.winner,
-        status=game.status
-    ))
+    # Game.query.filter_by(id=game_id).update(dict(
+    #     winner=game.winner,
+    #     status=game.status
+    # ))  # update game in the database
     db.session.commit()
+
+    winner = Player.query.filter_by(username=winner_username).first()  # get winner from database
+    winner.wins += 1
+    winner.score += 1
+    db.session.commit()
+
+    loser = Player.query.filter_by(username=loser_username).first()  # get loser from database
+    loser.losses += 1
+    loser.score -= 1
+    db.session.commit()
+
     return game.toJSON()
