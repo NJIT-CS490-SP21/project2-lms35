@@ -1,10 +1,7 @@
 import React, {useReducer} from 'react'
 
 const initialContext = {
-    "losses": 0,
-    "score": 0,
-    "username": null,
-    "wins": 0
+    'players': []
 }
 
 const initState = () => {
@@ -29,19 +26,21 @@ const reducer = (state, action) => {
     }
 
     switch (action.type) {
-        case 'login':
+        case 'update':
             // handle login action
-            result = {...action.payload}
+            result.players = [...action.payload.players]
             break
     }
 
     return result
 }
 
-const loginAction = (session) => ({type: 'login', payload: session})
+const updateLeaderboardAction = (leaderboard) => {
+    return {type: 'update', payload: leaderboard}
+}
 
 export {
     Context,
     ContextProvider,
-    loginAction
+    updateLeaderboardAction
 }

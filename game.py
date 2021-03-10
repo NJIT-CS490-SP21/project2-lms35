@@ -73,7 +73,7 @@ class Game:
         self.__spectators = []
         self.__board.reset()
         self.__winner = None
-        self.__status = 0
+        self.__status = 1
 
     def get_uuid(self) -> str:
         return self.__uuid

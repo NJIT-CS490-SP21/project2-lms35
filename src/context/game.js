@@ -1,8 +1,8 @@
 import React, {useReducer} from 'react'
 
 const initialContext = {
-    'status': null,
-    'board': [null, null, null, null, null, null, null, null, null]
+    current: null,
+    user_type: null // 1 => player_x, 2=> player_y, 3=> spectator
 }
 
 const initState = () => {
@@ -28,24 +28,29 @@ const reducer = (state, action) => {
 
     switch (action.type) {
         case 'set-game':
-            result = {...action.payload}
+            if (action.payload.game === null)
+                result['current'] = null
+            else
+                result['current'] = {...action.payload.game}
+            result['user_type'] = action.payload.user_type
             break
         case 'claim-square':
-            const newBoard = [...result.board]
-            newBoard.splice(action.payload.i, 1, action.payload.p)
-            result.board = newBoard
-            console.log(newBoard)
+            const newBoard = [...result.current.squares]
+            newBoard[action.payload.i][action.payload.j] = (action.payload.u === 1 ? 'x' : 'o')
+            result.current.squares = newBoard
             break
     }
     return result
 }
 
-const claimSquareAction = ({i, p}) => ({type: 'claim-square', payload: {i: i, p: p}})
-const setGameAction = (game) => ({type: 'set-game', payload: game})
+const claimSquareAction = ({i, j, u}) => ({type: 'claim-square', payload: {i: i, j: j, u: u}})
+const setCurrent = (game, user_type) => {
+    return {type: 'set-game', payload: {game: game, user_type: user_type}}
+}
 
 export {
     Context,
     ContextProvider,
     claimSquareAction,
-    setGameAction
+    setCurrent
 }

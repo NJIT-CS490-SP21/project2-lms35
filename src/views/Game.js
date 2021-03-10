@@ -1,41 +1,41 @@
 import Board from "../components/Board";
 import {useContext, useEffect} from "react";
-import {claimSquareAction, Context as GameContext, setGameAction} from "../context/game";
-import {Context as UserContext} from "../context/user";
-import Login from "./Login";
-import {getGameApi} from "../api/api";
+import {claimSquareAction, Context as GameContext, setCurrent} from "../context/game.js";
 
-const Game = ({socket}) => {
-    // const {gameState} = useContext(GameContext)
-    const user = useContext(UserContext)
+const Game = ({socket, onClickLeave}) => {
+    // const user = useContext(UserContext)
     const game = useContext(GameContext)
 
+
     useEffect(() => {
-        getGameApi().then(data => console.log(data) && game.dispatch(setGameAction(data)))
+
+        // read the current state of the game on load
+        // getGameApi().then(data => game.dispatch(setGameAction(data)))
+
+        // subscribe to current game room
+        socket.emit("subscribe", game.state.current.id);
+
+        // listen to changes on the game and update state
         socket.on('game', (data) => {
-            game.dispatch(setGameAction(data))
+            game.dispatch(setCurrent(data, game.state.user_type))
         });
+
+        // listen to claim events on the squares and update state
         socket.on('claim', (data) => {
             game.dispatch(claimSquareAction(data))
         });
+
     }, []);
 
-    if (user.state.username == null)
-        return <Login/>
-
-    const onClickReset = (e) => {
-        socket.emit('reset')
-    }
-
-
     return (<div>
-        {user.state.type === 'spectator' && <h4>You are spectating.</h4>}
-        {game.state.status === 0 && <div>
+        <button onClick={onClickLeave}>Leave Game</button>
+        {game.state.user_type === 3 && <h4>You are spectating.</h4>}
+        {game.state.current.status === 'waiting_for_players' && <div>
             <h2>Waiting for more players to join...</h2>
         </div>}
-        {game.state.status === 2 && <h3>Game Ended, {game.state.winner} is the winner!</h3>}
-        {game.state.status > 0 && <Board socket={socket}/>}
-        {user.state.type === 'player' && game.state.status === 2 && <button onClick={onClickReset}>Play Again</button>}
+        {game.state.current.status === 'finished' && <h3>Game Ended, {game.state.current.winner} is the winner!</h3>}
+        <Board socket={socket}/>
+        {/*{user.state.type === 'player' && game.state.status === 2 && <button onClick={onClickReset}>Play Again</button>}*/}
     </div>)
 
 }
