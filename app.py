@@ -49,7 +49,11 @@ def handle_login():
         db.session.commit()
 
         # notify all leaderboard listeners
-        socketio.emit('leaderboard', models.get_leaderboard(), broadcast=True, include_self=False, namespace='/',
+        socketio.emit('leaderboard',
+                      models.get_leaderboard(),
+                      broadcast=True,
+                      include_self=False,
+                      namespace='/',
                       skip_sid=True)
 
     return player.toJSON(), 201
@@ -72,9 +76,15 @@ def route_leaderboard():
 @app.route('/games', methods=['GET', 'POST'])
 def route_games():
     if request.method == 'POST':
-        game = models.create_game(session['username'])  # create the game in the db
-        socketio.emit('games', game, broadcast=True, include_self=False, namespace='/',
-                      skip_sid=True)  # alert clients that a new game has been added
+        game = models.create_game(
+            session['username'])  # create the game in the db
+        socketio.emit(
+            'games',
+            game,
+            broadcast=True,
+            include_self=False,
+            namespace='/',
+            skip_sid=True)  # alert clients that a new game has been added
         return game
     else:
         return {'games': models.get_games()}
@@ -83,10 +93,17 @@ def route_games():
 @app.route('/games/<game_id>', methods=['GET', 'PUT'])
 def route_game(game_id):
     if request.method == 'PUT':  # inferring this to mean join to play
-        game = models.set_game_player_o(game_id, session['username'])  # set player o on the game
-        socketio.emit('game', game, room=game['id'])  # tell the players of the game that it has started
-        socketio.emit('games', game, broadcast=True, include_self=False, namespace='/',
-                      skip_sid=True)  # tell everyone to update their games list
+        game = models.set_game_player_o(
+            game_id, session['username'])  # set player o on the game
+        socketio.emit('game', game, room=game['id']
+                      )  # tell the players of the game that it has started
+        socketio.emit(
+            'games',
+            game,
+            broadcast=True,
+            include_self=False,
+            namespace='/',
+            skip_sid=True)  # tell everyone to update their games list
         return {'game': game}
     else:
         game = get_game(game_id)
@@ -107,20 +124,29 @@ def get_game(id):
 @socketio.on('claim')
 def on_claim(data):
     game_id = data['channel']
-    game = models.set_game_square(game_id, data['i'], data['j'], ('x' if data['u'] == 1 else 'o'))
+    game = models.set_game_square(game_id, data['i'], data['j'],
+                                  ('x' if data['u'] == 1 else 'o'))
     socketio.emit('claim', data, room=game_id)
     winner = tictactoe.check_win(game['squares'])
     moves = tictactoe.count_moves(game['squares'])
     if winner:
-        game = models.set_game_winner(game_id, winner)  # set the game's winner and update scores
-        socketio.emit('leaderboard', broadcast=True, include_self=False, namespace='/',
-                      skip_sid=True)  # tell everyone to update their leaderboards
+        game = models.set_game_winner(
+            game_id, winner)  # set the game's winner and update scores
+        socketio.emit(
+            'leaderboard',
+            broadcast=True,
+            include_self=False,
+            namespace='/',
+            skip_sid=True)  # tell everyone to update their leaderboards
         socketio.emit('games', game, broadcast=True, include_self=True)
         socketio.emit('game', game, room=game_id)
     elif moves == 9:
         game = models.set_game_tie(game_id)  # set the game to a tie
-        socketio.emit('games', game, broadcast=True, include_self=True)  # notify everyone that game is finished
-        socketio.emit('game', game, room=game_id)  # notify players that the game has ended
+        socketio.emit(
+            'games', game, broadcast=True,
+            include_self=True)  # notify everyone that game is finished
+        socketio.emit('game', game,
+                      room=game_id)  # notify players that the game has ended
 
 
 @socketio.on('subscribe')

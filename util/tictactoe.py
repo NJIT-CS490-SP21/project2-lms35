@@ -16,7 +16,8 @@ def check_rows(board: List[List]) -> Optional[str]:
 def check_diagonals(board) -> Optional[str]:
     if len(set([board[i][i] for i in range(len(board))])) == 1:
         return board[0][0]
-    if len(set([board[i][len(board) - i - 1] for i in range(len(board))])) == 1:
+    if len(set([board[i][len(board) - i - 1]
+                for i in range(len(board))])) == 1:
         return board[0][len(board) - 1]
     return None
 

@@ -22,11 +22,9 @@ def create_app():
 
     from flask_socketio import SocketIO
     from flask import json
-    socketio = SocketIO(
-        app,
-        cors_allowed_origins="*",
-        json=json,
-        manage_session=False
-    )
+    socketio = SocketIO(app,
+                        cors_allowed_origins="*",
+                        json=json,
+                        manage_session=False)
 
     return app, cors, socketio, db
